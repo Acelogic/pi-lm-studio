@@ -1,0 +1,17 @@
+{
+  "name": "pi-lm-studio",
+  "version": "1.0.0",
+  "description": "Pi extension that discovers LM Studio models and registers them as a provider.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Acelogic/pi-lm-studio.git"
+  },
+  "homepage": "https://github.com/Acelogic/pi-lm-studio",
+  "keywords": ["pi-package", "pi", "lm-studio", "llm", "extension"],
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "pi": {
+    "extensions": ["./extensions"]
+  }
+}
