@@ -4,6 +4,9 @@ const PROVIDER = "lm-studio";
 const DEFAULT_ROOT_URL = "http://127.0.0.1:1234";
 const DEFAULT_API_KEY = "lm-studio";
 const STATUS_ID = "lm-studio";
+const PURPLE = "\x1b[38;5;129m";
+const RESET = "\x1b[0m";
+const ACTIVE_LABEL = `${PURPLE}LM Studio Active${RESET}`;
 
 type OpenAIModelListResponse = {
 	data?: Array<{
@@ -176,7 +179,7 @@ function updateStatus(ctx: ExtensionContext) {
 		usage?.tokens != null
 			? ` · ctx ${formatNumber(usage.tokens)}/${formatNumber(usage.contextWindow)} (${formatPercent(usage.percent ?? 0)})`
 			: ` · ctx unknown/${formatNumber(ctx.model.contextWindow)}`;
-	setStatus(ctx, `LM Studio active: ${ctx.model.id} @ ${cachedRootUrl}${usageText}`);
+	setStatus(ctx, `${ACTIVE_LABEL}: ${ctx.model.id} @ ${cachedRootUrl}${usageText}`);
 }
 
 async function detectModels(): Promise<{ rootUrl: string; models: ProviderModelConfig[] }> {
