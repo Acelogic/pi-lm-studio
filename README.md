@@ -37,6 +37,41 @@ Or add it to `~/.pi/agent/settings.json` or `.pi/settings.json`:
 }
 ```
 
+## Update
+
+Pull the latest commit on the default branch:
+
+```bash
+pi update git:github.com/Acelogic/pi-lm-studio
+```
+
+Or update every installed package at once:
+
+```bash
+pi update
+```
+
+Reload the running session to pick up the new code:
+
+```text
+/reload
+```
+
+### Pinning
+
+`pi update` **skips pinned sources**. If you installed with a tag suffix (e.g. `@v1.0.0`), move to a newer tag by reinstalling:
+
+```bash
+pi install git:github.com/Acelogic/pi-lm-studio@v1.1.0
+```
+
+### Inspect / remove
+
+```bash
+pi list
+pi remove git:github.com/Acelogic/pi-lm-studio
+```
+
 ## LM Studio setup
 
 Start the LM Studio local server first.
