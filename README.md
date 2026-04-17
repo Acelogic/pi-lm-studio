@@ -8,6 +8,9 @@ A pi package that discovers models from a running LM Studio server and registers
 - Registers them as a dynamic `lm-studio` provider in pi
 - Adds `/lm-studio-refresh` to rescan models
 - Adds `/lm-studio-use` to quickly switch to a detected LM Studio model
+- Adds `/lm-studio-context` to show current context window usage
+- Reports context usage in pi's status bar for active LM Studio models
+- Enables streamed usage reporting by default so pi can track context more accurately
 - Handles common local-server compatibility settings for pi
 
 ## Install
@@ -64,6 +67,7 @@ Then:
 
 - `/lm-studio-refresh` — detect available LM Studio models
 - `/lm-studio-use` — pick a detected model from a selector
+- `/lm-studio-context` — show current context usage for the active LM Studio model
 - `/model` — your LM Studio models should also appear in the main model picker
 
 ## Notes
@@ -71,3 +75,5 @@ Then:
 - Embedding models are filtered out
 - Models without tool tuning are labeled accordingly
 - Vision support is inferred from LM Studio's native metadata when available
+- Context usage in pi comes from streamed usage when LM Studio provides it, with pi falling back to estimation when needed
+- If your LM Studio server does not support streamed usage, you can disable it with `LM_STUDIO_STREAM_USAGE=false`

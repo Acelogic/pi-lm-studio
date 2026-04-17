@@ -36,6 +36,14 @@ type LMStudioNativeModelsResponse = {
 let cachedRootUrl = DEFAULT_ROOT_URL;
 let cachedModels: ProviderModelConfig[] = [];
 
+function envFlag(name: string, defaultValue: boolean): boolean {
+	const value = process.env[name]?.trim().toLowerCase();
+	if (!value) return defaultValue;
+	if (["1", "true", "yes", "on"].includes(value)) return true;
+	if (["0", "false", "no", "off"].includes(value)) return false;
+	return defaultValue;
+}
+
 function normalizeRootUrl(url: string): string {
 	const trimmed = url.trim().replace(/\/+$/, "");
 	if (!trimmed) return DEFAULT_ROOT_URL;
@@ -56,7 +64,7 @@ function createCompat() {
 	return {
 		supportsDeveloperRole: false,
 		supportsReasoningEffort: false,
-		supportsUsageInStreaming: false,
+		supportsUsageInStreaming: envFlag("LM_STUDIO_STREAM_USAGE", true),
 		maxTokensField: "max_tokens" as const,
 	};
 }
@@ -145,8 +153,30 @@ function buildModels(
 		});
 }
 
+function formatNumber(value: number): string {
+	return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatPercent(value: number): string {
+	return `${value.toFixed(value >= 10 ? 0 : 1)}%`;
+}
+
 function setStatus(ctx: ExtensionContext, text: string) {
 	ctx.ui.setStatus(STATUS_ID, text);
+}
+
+function updateStatus(ctx: ExtensionContext) {
+	if (ctx.model?.provider !== PROVIDER) {
+		setStatus(ctx, `LM Studio: ${cachedModels.length} model${cachedModels.length === 1 ? "" : "s"} @ ${cachedRootUrl}`);
+		return;
+	}
+
+	const usage = ctx.getContextUsage();
+	const usageText =
+		usage?.tokens != null
+			? ` · ctx ${formatNumber(usage.tokens)}/${formatNumber(usage.contextWindow)} (${formatPercent(usage.percent ?? 0)})`
+			: ` · ctx unknown/${formatNumber(ctx.model.contextWindow)}`;
+	setStatus(ctx, `LM Studio active: ${ctx.model.id} @ ${cachedRootUrl}${usageText}`);
 }
 
 async function detectModels(): Promise<{ rootUrl: string; models: ProviderModelConfig[] }> {
@@ -186,7 +216,7 @@ export default async function lmStudioExtension(pi: ExtensionAPI) {
 		});
 
 		if (ctx) {
-			setStatus(ctx, `LM Studio: ${models.length} model${models.length === 1 ? "" : "s"} @ ${rootUrl}`);
+			updateStatus(ctx);
 			if (notify) {
 				ctx.ui.notify(`LM Studio: detected ${models.length} model${models.length === 1 ? "" : "s"}.`, "success");
 			}
@@ -215,6 +245,7 @@ export default async function lmStudioExtension(pi: ExtensionAPI) {
 	pi.on("session_start", async (_event, ctx) => {
 		try {
 			await refreshWithFeedback(ctx, false);
+			updateStatus(ctx);
 		} catch {
 			// Keep startup quiet; the user can run /lm-studio-refresh once LM Studio is up.
 		}
@@ -224,6 +255,30 @@ export default async function lmStudioExtension(pi: ExtensionAPI) {
 		description: "Redetect LM Studio models and register them in /model",
 		handler: async (_args, ctx) => {
 			await refreshWithFeedback(ctx, true);
+		},
+	});
+
+	pi.registerCommand("lm-studio-context", {
+		description: "Show LM Studio context window usage for the active session",
+		handler: async (_args, ctx: ExtensionCommandContext) => {
+			if (ctx.model?.provider !== PROVIDER) {
+				ctx.ui.notify("Current model is not an LM Studio model.", "info");
+				return;
+			}
+
+			const usage = ctx.getContextUsage();
+			if (!usage || usage.tokens == null) {
+				ctx.ui.notify(`Context usage unavailable for ${PROVIDER}/${ctx.model.id} right now.`, "info");
+				updateStatus(ctx);
+				return;
+			}
+
+			const remaining = Math.max(0, usage.contextWindow - usage.tokens);
+			ctx.ui.notify(
+				`${PROVIDER}/${ctx.model.id}: ${formatNumber(usage.tokens)}/${formatNumber(usage.contextWindow)} tokens used (${formatPercent(usage.percent ?? 0)}), ${formatNumber(remaining)} remaining.`,
+				"info",
+			);
+			updateStatus(ctx);
 		},
 	});
 
@@ -270,9 +325,13 @@ export default async function lmStudioExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.on("model_select", async (event, ctx) => {
-		if (event.model.provider === PROVIDER) {
-			setStatus(ctx, `LM Studio active: ${event.model.id} @ ${cachedRootUrl}`);
+	pi.on("model_select", async (_event, ctx) => {
+		updateStatus(ctx);
+	});
+
+	pi.on("turn_end", async (_event, ctx) => {
+		if (ctx.model?.provider === PROVIDER) {
+			updateStatus(ctx);
 		}
 	});
 }
