@@ -21,18 +21,12 @@ From GitHub:
 pi install git:github.com/Acelogic/pi-lm-studio
 ```
 
-Pinned to a tag:
-
-```bash
-pi install git:github.com/Acelogic/pi-lm-studio@v1.0.0
-```
-
 Or add it to `~/.pi/agent/settings.json` or `.pi/settings.json`:
 
 ```json
 {
   "packages": [
-    "git:github.com/Acelogic/pi-lm-studio@v1.0.0"
+    "git:github.com/Acelogic/pi-lm-studio"
   ]
 }
 ```

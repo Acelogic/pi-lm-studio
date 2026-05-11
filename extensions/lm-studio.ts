@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext, ProviderModelConfig } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext, ProviderModelConfig } from "@earendil-works/pi-coding-agent";
 
 const PROVIDER = "lm-studio";
 const DEFAULT_ROOT_URL = "http://127.0.0.1:1234";
